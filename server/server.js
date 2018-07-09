@@ -15,6 +15,7 @@ app.use(bodyParser.json())
 //Configuración global de rutas
 app.use(require('./routes/index'));
 
+
 mongoose.connect(process.env.DB_URL, (err, res) => {
 
     if (err) throw err;
