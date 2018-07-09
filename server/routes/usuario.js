@@ -1,38 +1,51 @@
 const express = require('express');
-const app = express();
 const bcrypt = require('bcrypt');
 const _ = require('underscore');
-const Usuario = require('../models/usuario');
 
-app.get('/usuario', function (req, res) {
-    
+const Usuario = require('../models/usuario');
+const {
+    tokenVerification,
+    adminRoleVerification
+} = require('../middleware/authentication')
+
+const app = express();
+
+app.get('/usuario', tokenVerification, (req, res) => {
+
+    console.log(req.usuario);
+
+
     let from = Number(req.query.from) || 0;
     let limit = Number(req.query.limit) || 5;
 
-    Usuario.find({ estado: true }, 'nombre email role estado google img' )
-            .skip(from)
-            .limit(limit)
-            .exec((err, usuarios)=> {
-                if (err) {
-                    return res.status(400).json({
-                        OK: false,
-                        err
-                    });
-                }
-
-                Usuario.count({ estado: true }, (err, count) => {
-                    res.json({
-                        OK: true,
-                        count,
-                        usuarios
-                    });
+    Usuario.find({
+            estado: true
+        }, 'nombre email role estado google img')
+        .skip(from)
+        .limit(limit)
+        .exec((err, usuarios) => {
+            if (err) {
+                return res.status(400).json({
+                    OK: false,
+                    err
                 });
+            }
 
-                
-            })
+            Usuario.count({
+                estado: true
+            }, (err, count) => {
+                res.json({
+                    OK: true,
+                    count,
+                    usuarios
+                });
+            });
+
+
+        })
 })
 
-app.post('/usuario', function (req, res) {
+app.post('/usuario', [tokenVerification, adminRoleVerification], (req, res) => {
     let body = req.body;
     let usuario = new Usuario({
         nombre: body.nombre,
@@ -56,8 +69,8 @@ app.post('/usuario', function (req, res) {
     });
 })
 
-app.put('/usuario/:id', function (req, res) {
-   
+app.put('/usuario/:id', [tokenVerification, adminRoleVerification], (req, res) => {
+
     let id = req.params.id;
     let body = _.pick(req.body, ['nombre', 'img', 'role', 'estado']);
 
@@ -79,7 +92,7 @@ app.put('/usuario/:id', function (req, res) {
 
 })
 
-app.delete('/usuario/:id', function (req, res) {
+app.delete('/usuario/:id', [tokenVerification, adminRoleVerification], (req, res) => {
     let id = req.params.id;
     // Usuario.findByIdAndRemove(id, (err, item) => {
     //     if (err) {
