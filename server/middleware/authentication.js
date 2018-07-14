@@ -36,7 +36,27 @@ let adminRoleVerification = (req, res, next) => {
 
 }
 
+let tokenGetVerification = (req, res, next) => {
+    let token = req.query.token;
+
+    jws.verify(token, process.env.TOKEN_SEED, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({
+                OK: false,
+                err: {
+                    message: 'Token no valido'
+                }
+            })
+        }
+
+        req.usuario = decoded.usuario
+        next();
+
+    });
+}
+
 module.exports = {
     tokenVerification, 
-    adminRoleVerification
+    adminRoleVerification,
+    tokenGetVerification
 }
